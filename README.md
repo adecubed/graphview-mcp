@@ -62,6 +62,19 @@ came from. Everything in `examples/` is invented (`make_vault.py` and
 `graphview serve memory.json` works the same way for a Memory MCP file. Your own
 SQLite memory needs a mapping: see [Configuration](#configuration).
 
+### As an app, not a browser tab
+
+```bash
+uv run --extra app graphview app
+```
+
+opens graphview in a window of its own, through the system's web view
+(WebView2 on Windows, WebKit on macOS and Linux), with no memory given a panel
+asks which one to open: a notes folder, a `memory.json`, or a `graphview.yaml`.
+The choice is remembered in `~/.graphview`, so the next `graphview app` opens
+straight on it; `--choose` asks again. Installed as a package it is
+`uvx "graphview-mcp[app]" app`.
+
 ## The viewer
 
 | Do this | To |

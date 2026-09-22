@@ -7,6 +7,9 @@ license = "Apache-2.0"
 requires-python = ">=3.11"
 dependencies = ["mcp>=1.2", "pyyaml>=6"]
 
+[project.optional-dependencies]
+app = ["pywebview>=5"]   # graphview app: the viewer in a native window
+
 [project.scripts]
 graphview = "graphview.cli:main"
 

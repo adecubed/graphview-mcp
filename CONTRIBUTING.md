@@ -34,7 +34,8 @@ sources -> adapters -> canonical Graph -> GraphService -> HTTP API -> viewer
   coverage pass, and the one file graphview writes (`~/.graphview`).
 - `service.py`: one class both faces call into. Masking happens here, on the
   way out, never on stored data.
-- `http_api.py`, `mcp_server.py`, `cli.py`: the faces.
+- `http_api.py`, `mcp_server.py`, `cli.py`, `app.py`: the faces (`app.py` is the
+  same server in a pywebview window, plus the first-run panel).
 - `viewer-src/`: `api.js` (talks to the HTTP API), `state.js` (idle → searching
   → results → focus), `scene.js` (Three.js through 3d-force-graph), `panels.js`
   (the DOM), `main.js` (wires them). No framework.
