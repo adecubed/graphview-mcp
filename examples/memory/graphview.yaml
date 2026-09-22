@@ -1,0 +1,66 @@
+# The example agent memory (see make_memory.py). Everything in it is invented.
+#
+#   uv run graphview serve --config examples/memory/graphview.yaml
+#
+# For the question box to use a real recall instead of text search, start the
+# tiny recall server in another terminal first:
+#
+#   uv run python examples/memory/recall_server.py
+#
+# Paths are relative to this file.
+sources:
+  - name: lab
+    adapter: sqlite
+    path: graph.db
+    attach:
+      mem: memory.db          # facts and episodes live in a second file
+    nodes:
+      - table: entities
+        id: slug
+        label: slug
+        type: {column: kind}
+        created_at: first_seen
+        props: [mentions]
+      # Every fact, live or superseded, with the text of an agent's own memory.
+      # 'fact:<key>' is the id the links table uses.
+      - query: >
+          SELECT 'fact:' || key AS id, key, content, confidence, created_at,
+                 last_used, relation, sources,
+                 CASE WHEN superseded = 1 THEN 'fact_superseded' ELSE 'fact' END AS kind
+          FROM mem.facts
+        id: id
+        label: key
+        type: {column: kind}
+        created_at: created_at
+        props: [content, confidence, last_used, relation, sources]
+        refs: {sources: episode}          # a JSON list of episode ids, resolved on demand
+    edges:
+      - table: links
+        from: src
+        to: dst
+        type: {column: kind}
+        props: [created_at]
+    lookups:
+      episode:
+        query: SELECT id, created_at, channel, summary FROM mem.episodes WHERE id = ?
+    # The memory's own recall. Optional: without it, or with it down, the
+    # question box falls back to text search and says so.
+    search:
+      url: http://127.0.0.1:7790/ask
+      method: POST
+      body: {query: "{query}"}
+      results: results
+      id: "fact:{key}"
+      text: content
+      answer: answer
+      timeout: 5
+
+colors:
+  person: "#ffd166"
+  project: "#4cc9f0"
+  tool: "#2ec4b6"
+  place: "#b5e48c"
+  thing: "#a0c4ff"
+  fact: "#f72585"
+  fact_superseded: "#7a5c8a"
+  supersedes: "#ffd166"
