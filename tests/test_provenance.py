@@ -18,7 +18,10 @@ def service(tmp_path):
         INSERT INTO facts VALUES ('v3', 'port is 8766', '["e2","e3"]', 'v2'),
                                  ('v2', 'port is 8010', '["e1"]', 'v1'),
                                  ('v1', 'port unknown', NULL, NULL),
-                                 ('other', 'unrelated', '["e9"]', NULL);
+                                 ('other', 'unrelated', '["e9"]', NULL),
+                                 ('batch_a', 'from one batch', '["e1","e2","e3"]', NULL),
+                                 ('batch_b', 'same batch', '["e3","e2","e1"]', NULL),
+                                 ('batch_c', 'same batch again', '["e1","e2","e3"]', NULL);
     """)
     con.commit(); con.close()
     con = sqlite3.connect(epi)
@@ -42,6 +45,17 @@ def test_get_node_declares_its_refs_with_counts(service):
     assert d["refs"] == {"sources": {"lookup": "episode", "count": 2}}
     assert d["node"]["props"]["sources"] == ["e2", "e3"]
     assert service.get_node("b:v1")["refs"] == {}
+
+
+def test_refs_say_when_the_same_list_sits_on_other_nodes(service):
+    # A distiller that stamps the whole batch on every fact it writes leaves
+    # identical lists on unrelated nodes: the panel must not sell them as sources.
+    assert service.get_node("b:batch_a")["refs"]["sources"] == {"lookup": "episode", "count": 3, "shared_with": 2}
+    assert service.get_node("b:batch_b")["refs"]["sources"]["shared_with"] == 2   # order does not matter
+    assert "shared_with" not in service.get_node("b:v3")["refs"]["sources"]      # a list of its own
+    assert service.provenance("b:batch_a")["refs"]["sources"]["shared_with"] == 2
+    service.reload()
+    assert service.get_node("b:batch_c")["refs"]["sources"]["shared_with"] == 2
 
 
 def test_lookup_resolves_a_nodes_ref_prop(service):

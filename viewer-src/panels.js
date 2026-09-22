@@ -313,6 +313,13 @@ export function renderDetail(detail, colors, onPick, onPathFrom, onLookup) {
       }
     });
     box.append(button);
+    if (ref.shared_with) {
+      // The same list on other nodes means the writer stamped a whole batch on
+      // everything it produced: say so before someone reads the rows as evidence.
+      const others = `${ref.shared_with} other node${ref.shared_with === 1 ? '' : 's'}`;
+      box.append(el('p', { className: 'note',
+        text: `The same ${ref.count} ${ref.lookup}s are listed on ${others}: a batch, not this node's own sources.` }));
+    }
     parts.push(box);
   }
 

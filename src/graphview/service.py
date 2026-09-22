@@ -32,7 +32,30 @@ class GraphService:
             graph = graph.masked_copy(Masker(self.config.mask_patterns))
         with self._lock:
             self._view, self._adapters = graph, adapters
+            self._ref_lists = None
         return self.stats()
+
+    def _ref_list_counts(self) -> dict:
+        """How many nodes carry each exact reference list, per source and prop.
+
+        Built on first use and dropped on reload. A writer that stamps the whole
+        batch it was reading on every node it produces leaves the same list on
+        nodes that have nothing to do with each other; counting the copies is
+        what lets the panel say so instead of presenting them as sources.
+        """
+        with self._lock:
+            if self._ref_lists is None:
+                counts: dict[tuple, int] = {}
+                declared = {getattr(a, "name", None): (getattr(a, "refs", {}) or {})
+                            for a in self._adapters}
+                for node in self._view.nodes.values():
+                    for prop in declared.get(node.source, {}):
+                        ids = node.props.get(prop)
+                        if isinstance(ids, list) and ids:
+                            key = (node.source, prop, frozenset(map(str, ids)))
+                            counts[key] = counts.get(key, 0) + 1
+                self._ref_lists = counts
+            return self._ref_lists
 
     @property
     def graph(self) -> Graph:
@@ -78,6 +101,11 @@ class GraphService:
             ids = props.get(prop)
             if isinstance(ids, list) and ids:
                 out[prop] = {"lookup": lookup, "count": len(ids)}
+                source = node_id.partition(":")[0]
+                copies = self._ref_list_counts().get((source, prop, frozenset(map(str, ids))), 1)
+                if copies > 1:
+                    # Other nodes carry this exact list: a batch stamp, not provenance.
+                    out[prop]["shared_with"] = copies - 1
         return out
 
     def lookup(self, node_id: str, prop: str) -> dict:
@@ -125,13 +153,14 @@ class GraphService:
         brief = lambda nid: {"id": nid, "label": g.nodes[nid].label, "type": g.nodes[nid].type,
                              "created_at": g.nodes[nid].created_at}
         sources = {}
-        for prop in self._refs_of(node_id, node.props):
+        refs = self._refs_of(node_id, node.props)
+        for prop in refs:
             found = self.lookup(node_id, prop)
             sources[prop] = found.get("rows", [])[:max_sources]
         return {"node": g.node_dict(node),
                 "supersedes": [brief(n) for n in walk(node_id, out_edges)],
                 "superseded_by": [brief(n) for n in walk(node_id, in_edges)],
-                "sources": sources}
+                "refs": refs, "sources": sources}
 
     def get_node(self, node_id: str, compact: bool = False, max_per_type: int = 40) -> dict:
         """One node and its links grouped by type.

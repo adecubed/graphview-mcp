@@ -302,6 +302,7 @@ body:not([data-state="idle"]) #timeline { display: none; }
 }
 #detail .action:hover { background: rgba(76, 201, 240, 0.16); }
 #detail .refs { margin-bottom: 12px; }
+#detail .refs .note { margin: 6px 0 0; font-size: 12px; line-height: 1.4; color: #ffd166; }
 #detail .rows { list-style: none; margin: 0 0 12px; padding: 0; max-height: 34vh; overflow-y: auto; }
 #detail .rows li { display: flex; gap: 8px; padding: 3px 0; border-top: 1px solid rgba(76, 201, 240, 0.12); }
 #detail .rows .when { flex: none; width: 76px; color: var(--dim); }
