@@ -1,0 +1,5 @@
+{"type":"entity","name":"Ada","entityType":"person","observations":["Leads the Lighthouse project","Prefers written updates"]}
+{"type":"entity","name":"Lighthouse","entityType":"project","observations":["Started in 2026"]}
+{"type":"entity","name":"Knowledge graph","entityType":"concept","observations":[]}
+{"type":"relation","from":"Ada","to":"Lighthouse","relationType":"leads"}
+{"type":"relation","from":"Lighthouse","to":"Knowledge graph","relationType":"uses"}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'">
+  <title>graphview</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-state="idle">
+  <div id="graph"></div>
+
+  <header id="status" class="panel">
+    <span id="state-name">idle</span>
+    <span id="counts"></span>
+    <span id="notice"></span>
+  </header>
+
+  <button id="filters-toggle" class="panel" type="button" aria-expanded="true">filters</button>
+  <button id="fit" class="panel" type="button" title="Show the whole graph (H)">fit</button>
+  <div id="dims" class="panel" role="group" aria-label="Layout dimensions">
+    <button type="button" data-dim="2" aria-pressed="false">2D</button>
+    <button type="button" data-dim="3" aria-pressed="true">3D</button>
+  </div>
+  <button id="back" class="panel" type="button" title="Back (Esc)" hidden>&larr; back</button>
+  <aside id="filters" class="panel">
+    <section>
+      <h2>colour by</h2>
+      <select id="color-mode" aria-label="Colour the nodes by">
+        <option value="type">type</option>
+        <option value="source">source</option>
+      </select>
+      <div id="legend" hidden><span id="legend-low"></span><span id="legend-bar"></span><span id="legend-high"></span></div>
+    </section>
+    <section><h2>node types</h2><ul id="node-types"></ul></section>
+    <section><h2>link types</h2><ul id="edge-types"></ul></section>
+    <section><h2>sources</h2><ul id="sources"></ul></section>
+    <section id="islands-section" hidden>
+      <h2>layout</h2>
+      <label id="islands-row"><input type="checkbox" id="hide-islands"> <span>hide islands</span><span class="count" id="islands-count"></span></label>
+      <label id="rim-row"><input type="checkbox" id="hide-rim"> <span>hide unlinked rim</span><span class="count" id="rim-count"></span></label>
+    </section>
+    <section id="coverage" hidden>
+      <h2>recall coverage</h2>
+      <p id="coverage-note"></p>
+      <ul id="coverage-questions"></ul>
+    </section>
+    <section>
+      <h2>worklist</h2>
+      <button id="export" type="button" title="Likely duplicates, islands and unlinked nodes, as a Markdown checklist">export list</button>
+      <p id="export-note"></p>
+    </section>
+  </aside>
+
+  <aside id="detail" class="panel" hidden></aside>
+
+  <p id="hint"><span id="hint-drag">drag: rotate</span> &middot; wheel: zoom to pointer &middot; right-drag: pan &middot; click: focus &middot; H: whole graph &middot; T: time-lapse</p>
+
+  <section id="timeline" class="panel" hidden aria-label="Time-lapse">
+    <button id="time-play" type="button" title="Play the graph growing over time (T)">&#9654;</button>
+    <input id="time-slider" type="range" min="0" max="100" value="100" step="1" aria-label="Moment in time">
+    <span id="time-label"></span>
+  </section>
+
+  <footer id="query" class="panel">
+    <section id="answer" hidden>
+      <h2><span id="answer-mode">answer</span><button id="answer-toggle" type="button" aria-expanded="true">hide</button></h2>
+      <p id="answer-text"></p>
+    </section>
+    <ol id="results" hidden></ol>
+    <div id="prompt">
+      <span aria-hidden="true">&gt;</span>
+      <textarea id="question" rows="1" spellcheck="false"
+                placeholder="ask the memory…  (Enter to search, Esc to go back, / to type)"></textarea>
+      <button id="clear" type="button" title="Close the answer and show the whole graph (H)" hidden>&times;</button>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

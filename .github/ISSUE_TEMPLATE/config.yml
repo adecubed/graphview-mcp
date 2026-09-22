@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: The graph contract proposal
+    url: https://github.com/adecubed/graphview-mcp/blob/main/docs/graph-contract.md
+    about: Four tools a memory server could expose so any viewer can read it. Comments wanted.

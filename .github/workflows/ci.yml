@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: tests (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked
+      - run: uv run pytest -q
+
+  viewer:
+    name: viewer builds from source and matches the committed bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: viewer-src/package-lock.json
+      - run: npm ci
+        working-directory: viewer-src
+      - run: npm run build
+        working-directory: viewer-src
+      # esbuild is pinned by the lockfile, so the bundle is reproducible: a diff
+      # here means viewer-src changed and the build was not committed with it.
+      - run: git diff --stat --exit-code -- src/graphview/viewer/
+
+  package:
+    name: the wheel ships the viewer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build --wheel
+      - run: |
+          python - <<'EOF'
+          import glob, zipfile
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          for want in ("graphview/viewer/index.html", "graphview/viewer/app.js",
+                       "graphview/viewer/style.css", "graphview/viewer/THIRD_PARTY_NOTICES.txt"):
+              assert want in names, want
+          assert not [n for n in names if "tests/" in n or "examples/" in n], "stray files in the wheel"
+          print(len(names), "files, viewer included")
+          EOF
