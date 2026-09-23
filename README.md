@@ -2,8 +2,10 @@
 
 **See what your agent knows, and how it finds it.**
 
-<!-- GIF: the graph turning, the time-lapse, a question lighting up its facts.
-     examples/memory in 3D, recorded with ?labels=0 -->
+<!-- The GIF lives on the `media` branch so that main stays light. -->
+![An agent's memory growing from June to today, then a look inside](https://raw.githubusercontent.com/adecubed/graphview-mcp/media/demo.gif)
+
+*A real memory: 1,949 nodes distilled from four months of an assistant's work, played back in time, then opened up.*
 
 An agent's memory is a graph nobody has ever looked at whole: facts, entities,
 versions, the episodes they came from. This is a read-only viewer and MCP
