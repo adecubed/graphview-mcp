@@ -19,6 +19,7 @@ def service(tmp_path):
                                  ('v2', 'port is 8010', '["e1"]', 'v1'),
                                  ('v1', 'port unknown', NULL, NULL),
                                  ('other', 'unrelated', '["e9"]', NULL),
+                                 ('twin', 'also from e9', '["e9"]', NULL),
                                  ('batch_a', 'from one batch', '["e1","e2","e3"]', NULL),
                                  ('batch_b', 'same batch', '["e3","e2","e1"]', NULL),
                                  ('batch_c', 'same batch again', '["e1","e2","e3"]', NULL);
@@ -56,6 +57,13 @@ def test_refs_say_when_the_same_list_sits_on_other_nodes(service):
     assert service.provenance("b:batch_a")["refs"]["sources"]["shared_with"] == 2
     service.reload()
     assert service.get_node("b:batch_c")["refs"]["sources"]["shared_with"] == 2
+
+
+def test_a_single_shared_source_is_not_a_batch(service):
+    # Two facts learned from the same episode is the ordinary case, not a batch stamp;
+    # warning about it fired on every well-formed pair the builder's mentions rule makes.
+    assert "shared_with" not in service.get_node("b:other")["refs"]["sources"]
+    assert "shared_with" not in service.get_node("b:twin")["refs"]["sources"]
 
 
 def test_lookup_resolves_a_nodes_ref_prop(service):

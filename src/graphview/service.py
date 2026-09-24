@@ -15,6 +15,10 @@ from .model import Graph
 PALETTE = ["#4cc9f0", "#f72585", "#b5e48c", "#ffd166", "#9d4edd", "#ff9f1c",
            "#2ec4b6", "#ef476f", "#a0c4ff", "#caffbf", "#ffadad", "#bdb2ff"]
 
+# How many references a shared list needs before it reads as a batch stamp rather than
+# as two nodes that honestly came from the same place.
+BATCH_REFS = 3
+
 
 class GraphService:
     def __init__(self, config: Config) -> None:
@@ -103,8 +107,11 @@ class GraphService:
                 out[prop] = {"lookup": lookup, "count": len(ids)}
                 source = node_id.partition(":")[0]
                 copies = self._ref_list_counts().get((source, prop, frozenset(map(str, ids))), 1)
-                if copies > 1:
-                    # Other nodes carry this exact list: a batch stamp, not provenance.
+                # Other nodes carry this exact list: a batch stamp, not provenance. One shared
+                # reference is not a batch, though -- two facts learned from the same episode,
+                # or the pair of nodes a mentions link rests on, are the ordinary case, and
+                # warning about them cried wolf on well-formed graphs. Three is a pattern.
+                if copies > 1 and len(ids) >= BATCH_REFS:
                     out[prop]["shared_with"] = copies - 1
         return out
 

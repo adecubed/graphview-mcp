@@ -200,10 +200,12 @@ called `supersedes`, which a `query:` edge can build with `json_each` when the
 column holds a JSON list of keys. `examples/memory/graphview.yaml` does all of
 this.
 
-When the same list sits on other nodes, the panel says so ("listed on 6 other
-nodes: a batch, not this node's own sources") and `refs` carries `shared_with`.
-A distiller that stamps every fact it writes with the whole batch it was reading
-leaves exactly that trace; it is the first thing this view showed us about ours.
+When the same list of three or more references sits on other nodes, the panel
+says so ("listed on 6 other nodes: a batch, not this node's own sources") and
+`refs` carries `shared_with`. A distiller that stamps every fact it writes with
+the whole batch it was reading leaves exactly that trace; it is the first thing
+this view showed us about ours. Two nodes sharing a single reference are just
+two nodes that came from the same place, so they pass without comment.
 
 ## Configuration
 
