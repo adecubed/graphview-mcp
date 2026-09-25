@@ -345,6 +345,46 @@ export function renderDetail(detail, colors, onPick, onPathFrom, onLookup) {
   panel.scrollTop = 0;
 }
 
+const GROUP_TITLES = { thing: 'things', folder: 'folders', phrase: 'recurring names', category: 'categories' };
+
+/** What's in here: the named sets of nodes the memory declares, in its own words.
+ *  Clicking a group lights its members; clicking it again lets go. */
+export function renderGroups(groups, onPick, activeName = null) {
+  const panel = $('whats-here');
+  const body = $('whats-here-body');
+  body.replaceChildren();
+  panel.hidden = !groups || !groups.length;
+  if (panel.hidden) return;
+  const kinds = [...new Set(groups.map((g) => g.kind))];
+  const known = Object.keys(GROUP_TITLES);
+  kinds.sort((a, b) => (known.indexOf(a) + 1 || 99) - (known.indexOf(b) + 1 || 99));
+  for (const kind of kinds) {
+    body.append(el('h2', { text: GROUP_TITLES[kind] || kind }));
+    const list = el('ul');
+    for (const group of groups.filter((g) => g.kind === kind)) {
+      // A category reads "field: value"; the value is the part a person scans for.
+      const split = kind === 'category' ? group.name.indexOf(': ') : -1;
+      const parts = split > 0
+        ? [el('span', { className: 'value', text: group.name.slice(0, split + 1) }), el('span', { text: group.name.slice(split + 2) })]
+        : [el('span', { text: group.name })];
+      parts.push(el('span', { className: 'count', text: String(group.count) }));
+      const button = el('button', { type: 'button', className: `group${group.name === activeName ? ' active' : ''}` }, parts);
+      button.addEventListener('click', () => onPick(group));
+      list.append(el('li', {}, [button]));
+    }
+    body.append(list);
+  }
+}
+
+export function onGroupsToggle() {
+  const panel = $('whats-here');
+  const button = $('whats-here-toggle');
+  button.addEventListener('click', () => {
+    const open = panel.classList.toggle('collapsed');
+    button.setAttribute('aria-expanded', String(!open));
+  });
+}
+
 export function renderResults(matches, colors, onPick) {
   const list = $('results');
   list.replaceChildren();

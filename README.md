@@ -157,6 +157,25 @@ worst first; click one to run it and see what came back instead.
 The report is saved as `~/.graphview/coverage-<hash>.json`. It holds the
 questions and node ids, so treat it like the memory it describes.
 
+## What's in here
+
+A person opening a graph does not ask for node types; they ask what is in there.
+A mapping can answer in the memory's own words with a `groups:` query: named
+sets of nodes, each with a kind (`thing`, `folder`, `phrase`, `category` or
+anything else) and its member ids as a JSON list:
+
+```yaml
+    groups:
+      query: SELECT kind, name, field, members FROM groups ORDER BY id
+```
+
+The viewer lists them in a panel on the right, "what's in here": *Flats (31)*,
+*Buyers (7)*, the folders documents came from, the phrases that recur in file
+names, the categories with their values. Click one and its members light up;
+click again and the whole graph comes back. Agents get the same list from the
+`groups` tool. A top-level `names:` map gives plain names to what the data
+calls by a column (`names: {key: Flats, ACQUIRENTE: Buyers}`).
+
 ## Reading a memory's health
 
 **Export list**, at the bottom of the filters, saves a Markdown checklist of

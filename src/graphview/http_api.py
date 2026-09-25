@@ -71,6 +71,8 @@ def _route(service: GraphService, path: str, p: dict):
         return {"history": service.worklist_history()}
     if path == "/api/types":
         return service.list_types()
+    if path == "/api/groups":
+        return service.groups()
     if path == "/api/reload":
         return service.reload()
     return None

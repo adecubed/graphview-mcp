@@ -486,6 +486,11 @@ export function createScene(element, { onNodeClick, onBackgroundClick, onLeave }
     },
 
     has: (id) => nodeIds.has(id),
+    /** The nodes behind these ids, as the lists show them. */
+    pick: (ids) => {
+      const wanted = new Set(ids);
+      return data.nodes.filter((n) => wanted.has(n.id)).map((n) => ({ id: n.id, label: n.label, type: n.type }));
+    },
     counts: () => ({ nodes: data.nodes.length, links: data.links.length }),
     islands: () => islands,
 

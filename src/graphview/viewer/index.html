@@ -53,7 +53,13 @@
     </section>
   </aside>
 
-  <aside id="detail" class="panel" hidden></aside>
+  <div id="right">
+    <aside id="whats-here" class="panel" hidden aria-label="What's in here">
+      <button id="whats-here-toggle" type="button" aria-expanded="true">what's in here</button>
+      <div id="whats-here-body"></div>
+    </aside>
+    <aside id="detail" class="panel" hidden></aside>
+  </div>
 
   <p id="hint"><span id="hint-drag">drag: rotate</span> &middot; wheel: zoom to pointer &middot; right-drag: pan &middot; click: focus &middot; H: whole graph &middot; T: time-lapse</p>
 

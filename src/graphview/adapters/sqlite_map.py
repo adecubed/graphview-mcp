@@ -77,6 +77,9 @@ class SqliteMapAdapter:
         self.edge_specs = source.get("edges") or []
         self.attach = source.get("attach") or {}
         self.lookups = source.get("lookups") or {}
+        # `groups:` names sets of nodes for the viewer's "what's in here" panel: a SELECT
+        # with name, members (a JSON list of native ids) and optionally kind and field.
+        self.group_spec = source.get("groups")
         # prop name -> lookup name, over every node spec
         self.refs: dict[str, str] = {}
         for spec in self.node_specs:
@@ -92,6 +95,8 @@ class SqliteMapAdapter:
             _ident(alias)
         for name, spec in self.lookups.items():
             _lookup_sql(name, spec)
+        if self.group_spec:
+            _source_sql(self.group_spec)
         # Other databases join in under an alias (`sem.facts`), read-only like
         # the main one; mode=ro also makes a missing file an error.
         con = self._connect()
@@ -129,6 +134,31 @@ class SqliteMapAdapter:
                 if row is not None:
                     rows.append(dict(row))
             return rows
+        finally:
+            con.close()
+
+    def groups(self) -> list[dict]:
+        """The named sets of nodes the mapping declares, member ids prefixed like the nodes."""
+        if not self.group_spec:
+            return []
+        con = self._connect()
+        try:
+            out = []
+            for row in con.execute(_source_sql(self.group_spec)):
+                keys = row.keys()
+                raw = row["members"] if "members" in keys else None
+                if isinstance(raw, str) and raw.lstrip().startswith("["):
+                    try:
+                        members = json.loads(raw)
+                    except ValueError:
+                        members = []
+                else:
+                    members = str(raw or "").split(",")
+                out.append({"name": str(row["name"]),
+                            "kind": str(row["kind"]) if "kind" in keys and row["kind"] else "group",
+                            "field": str(row["field"]) if "field" in keys and row["field"] else "",
+                            "members": [self._nid(str(m).strip(), None) for m in members if str(m).strip()]})
+            return out
         finally:
             con.close()
 

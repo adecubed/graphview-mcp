@@ -2,8 +2,8 @@ import { api, download, request } from './api.js';
 import { createScene } from './scene.js';
 import { createState } from './state.js';
 import {
-  onAnswerToggle, onBack, onColorMode, onDimensions, onExport, onFit, onQuestion, renderAnswer,
-  renderCoverage, renderDetail, renderIslands, renderTimeline, renderFilters, renderResults, renderStatus,
+  onAnswerToggle, onBack, onColorMode, onDimensions, onExport, onFit, onGroupsToggle, onQuestion, renderAnswer,
+  renderCoverage, renderDetail, renderGroups, renderIslands, renderTimeline, renderFilters, renderResults, renderStatus,
 } from './panels.js';
 
 const MAX_MISSING_TO_FETCH = 10;
@@ -42,16 +42,35 @@ function goBack() {
   else scene.frameAll();
 }
 
+// What's in here: the groups the memory declares, and the one lit up right now.
+let groups = [];
+let activeGroup = null;
+
 const machine = createState((state) => {
   scene.setHighlight(state.highlight);
   scene.slow(state.name === 'searching');
   renderStatus(state.name, scene.counts(), meta);
   if (state.name !== 'focus') renderDetail(null);
+  // An open node needs the room: the groups fold to their title until it closes.
+  document.getElementById('whats-here').classList.toggle('collapsed', state.name === 'focus');
   if (state.name === 'idle') {
     renderResults(null);
     renderAnswer(null);
+    if (activeGroup) { activeGroup = null; renderGroups(groups, showGroup); }
   }
 });
+
+function showGroup(group) {
+  if (activeGroup === group.name) return goHome();
+  const ids = group.ids.filter((id) => scene.has(id));
+  activeGroup = group.name;
+  renderGroups(groups, showGroup, group.name);
+  machine.results(ids, [], true);
+  const missing = group.count - ids.length;
+  renderAnswer({ mode: 'group', answer: `${group.name}: ${ids.length} in the graph${missing ? `, ${missing} not loaded` : ''}` });
+  renderResults(scene.pick(ids), colors, focusNode);
+  setTimeout(() => scene.frame(ids), 80);
+}
 
 function fail(error) {
   document.getElementById('notice').textContent = error.message;
@@ -167,6 +186,9 @@ async function start() {
     });
     onQuestion(ask, goBack, goHome);
     onBack(goBack);
+    onGroupsToggle();
+    api('groups').then((found) => { groups = found.groups || []; renderGroups(groups, showGroup); })
+      .catch(() => renderGroups([], showGroup));
     onFit(goHome);
     onDimensions((dim) => scene.setDimensions(dim));
     renderStatus('idle', scene.counts(), meta);

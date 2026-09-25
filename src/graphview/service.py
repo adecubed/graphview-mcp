@@ -302,6 +302,34 @@ class GraphService:
     def stats(self) -> dict:
         return ops.stats(self.graph)
 
+    def groups(self, max_ids: int | None = None) -> dict:
+        """What's in here: the named sets of nodes the sources declare (things, folders,
+        recurring names, categories), with the plain names from `names:` applied."""
+        g = self.graph
+        names = self.config.names
+        out = []
+        for adapter in list(self._adapters):
+            declare = getattr(adapter, "groups", None)
+            if not callable(declare):
+                continue
+            try:
+                declared = declare()
+            except Exception as exc:  # a broken groups query must not take the panel down
+                g.warnings.append(f"{getattr(adapter, 'name', '?')}: groups: {exc}")
+                continue
+            for item in declared:
+                ids = [i for i in item.get("members", []) if i in g.nodes]
+                if not ids:
+                    continue
+                kind, field, name = item.get("kind", "group"), item.get("field", ""), item["name"]
+                if kind == "thing":
+                    name = names.get(name, name)
+                elif kind == "category" and field and name.startswith(f"{field}: "):
+                    name = f"{names.get(field, field)}: {name[len(field) + 2:]}"
+                out.append({"name": name, "kind": kind, "field": field, "count": len(ids),
+                            "ids": ids if max_ids is None else ids[:max_ids]})
+        return {"groups": out, "names": dict(names)}
+
     def list_types(self) -> dict:
         s = self.stats()
 

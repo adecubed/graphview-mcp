@@ -113,6 +113,13 @@ def build_server(service: GraphService, port: int = 0,
         return service.list_types()
 
     @mcp.tool()
+    def groups(max_ids: int = 20) -> dict:
+        """What's in here: the named sets of nodes the memory declares (the things it
+        resolved, folders, recurring names, categories), each with its count and up to
+        `max_ids` member ids. A plain-language table of contents for the graph."""
+        return service.groups(max_ids=max_ids)
+
+    @mcp.tool()
     def reload() -> dict:
         """Read every source again. Returns the new stats."""
         return service.reload()

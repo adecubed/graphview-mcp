@@ -39,7 +39,7 @@ def test_all_tools_are_registered(setup):
     server, _ = setup
     names = {t.name for t in resolve(server.list_tools())}
     assert names == {"get_graph", "get_node", "neighbors", "search", "graph_stats",
-                     "list_types", "reload", "open_viewer", "worklist", "path", "provenance"}
+                     "list_types", "reload", "open_viewer", "worklist", "path", "provenance", "groups"}
 
 
 def test_graph_tools_return_canonical_json(setup):

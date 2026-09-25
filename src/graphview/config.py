@@ -21,6 +21,7 @@ class Config:
     mask_patterns: list[str] | None = None
     limit: int = DEFAULT_LIMIT
     colors: dict[str, str] = field(default_factory=dict)
+    names: dict[str, str] = field(default_factory=dict)   # plain names for kinds and groups
 
 
 def _resolve(given: str, base: Path) -> str:
@@ -64,7 +65,8 @@ def load_config(config_path: str | None = None, cli_path: str | None = None) -> 
                       masking=bool(raw.get("masking", False)),
                       mask_patterns=raw.get("mask_patterns"),
                       limit=int(raw.get("limit", DEFAULT_LIMIT)),
-                      colors=dict(raw.get("colors") or {}))
+                      colors=dict(raw.get("colors") or {}),
+                      names={str(k): str(v) for k, v in (raw.get("names") or {}).items()})
     if cli_path:
         path = Path(cli_path)
         if not path.exists():
