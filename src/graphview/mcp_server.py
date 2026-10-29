@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import secrets
 import threading
 import webbrowser
 from typing import Callable
@@ -14,7 +13,7 @@ try:  # mcp 2.x
 except ImportError:  # mcp 1.x, same class under its old name
     from mcp.server.fastmcp import FastMCP as MCPServer
 
-from .http_api import make_server
+from .http_api import make_server, resolve_token
 from .service import GraphService
 
 # Defaults for tool answers, sized for an agent's context rather than for a screen.
@@ -27,7 +26,7 @@ def _json(payload: dict) -> str:
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str)
 
 
-def build_server(service: GraphService, port: int = 0,
+def build_server(service: GraphService, port: int = 0, token: str | None = None,
                  opener: Callable[[str], object] = webbrowser.open) -> MCPServer:
     mcp = MCPServer("graphview", instructions=(
         "Read-only view of a graph-shaped memory. Use search and neighbors to explore, "
@@ -39,10 +38,10 @@ def build_server(service: GraphService, port: int = 0,
     def viewer_base() -> tuple[str, str]:
         with lock:
             if not viewer:
-                token = secrets.token_urlsafe(24)
-                http = make_server(service, token, port)
+                tok = resolve_token(token)
+                http = make_server(service, tok, port)
                 threading.Thread(target=http.serve_forever, daemon=True).start()
-                viewer.update(token=token, base=f"http://127.0.0.1:{http.server_address[1]}/")
+                viewer.update(token=tok, base=f"http://127.0.0.1:{http.server_address[1]}/")
             return viewer["base"], viewer["token"]
 
     @mcp.tool()
@@ -141,5 +140,5 @@ def build_server(service: GraphService, port: int = 0,
     return mcp
 
 
-def run(service: GraphService, port: int = 0) -> None:
-    build_server(service, port).run()
+def run(service: GraphService, port: int = 0, token: str | None = None) -> None:
+    build_server(service, port, token).run()

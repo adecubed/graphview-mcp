@@ -129,7 +129,7 @@ class _Api:
 
 
 def run(config_path: str | None = None, cli_path: str | None = None, port: int = 0,
-        choose: bool = False) -> int:
+        choose: bool = False, token: str | None = None) -> int:
     try:
         import webview
     except ImportError:
@@ -146,7 +146,7 @@ def run(config_path: str | None = None, cli_path: str | None = None, port: int =
         """Load the memory, start the local server, return the viewer URL."""
         config = config_for(kind, path)
         service = GraphService(config)
-        url = start_viewer(service, port)
+        url = start_viewer(service, port, token)
         state["service"] = service
         remember(kind, path)
         return url

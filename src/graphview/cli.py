@@ -5,19 +5,18 @@ in a window of its own, `graphview mcp` runs the MCP server, `graphview coverage
 from __future__ import annotations
 
 import argparse
-import secrets
 import sys
 import threading
 import webbrowser
 
 from .config import ConfigError, load_config
-from .http_api import make_server
+from .http_api import make_server, resolve_token
 from .service import GraphService
 
 
-def start_viewer(service: GraphService, port: int = 0) -> str:
+def start_viewer(service: GraphService, port: int = 0, token: str | None = None) -> str:
     """Start the HTTP server in a background thread; return the URL with its token."""
-    token = secrets.token_urlsafe(24)
+    token = resolve_token(token)
     server = make_server(service, token, port)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     # The token travels in the fragment, which browsers never send to a server.
@@ -62,6 +61,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("path", nargs="?", help="vault folder or memory.json")
     parser.add_argument("--config", help="graphview.yaml")
     parser.add_argument("--port", type=int, default=0, help="viewer port (default: any free)")
+    parser.add_argument("--token",
+                        help="pin the viewer token so a bookmarked URL survives restarts "
+                             "(default: a fresh random one per run, or $GRAPHVIEW_TOKEN)")
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--choose", action="store_true",
                         help="app: ask which memory to open, instead of the last one")
@@ -78,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "app":
         from .app import run as run_app
         try:
-            return run_app(args.config, args.path, args.port, choose=args.choose)
+            return run_app(args.config, args.path, args.port, choose=args.choose, token=args.token)
         except ConfigError as exc:
             print(f"graphview: {exc}", file=sys.stderr)
             return 2
@@ -97,11 +99,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "mcp":
         from .mcp_server import run
-        run(service, args.port)
+        run(service, args.port, args.token)
         return 0
 
     try:
-        url = start_viewer(service, args.port)
+        url = start_viewer(service, args.port, args.token)
     except OSError as exc:
         print(f"graphview: cannot listen on port {args.port}: {exc}", file=sys.stderr)
         return 2

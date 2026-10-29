@@ -75,7 +75,7 @@ def test_cli_mask_flag_overrides_the_config(tmp_path, monkeypatch):
     from graphview import cli
     seen = {}
     monkeypatch.setattr(cli, "GraphService", lambda config: seen.setdefault("config", config))
-    monkeypatch.setattr(cli, "start_viewer", lambda service, port=0: (_ for _ in ()).throw(SystemExit(0)))
+    monkeypatch.setattr(cli, "start_viewer", lambda service, port=0, token=None: (_ for _ in ()).throw(SystemExit(0)))
     with pytest.raises(SystemExit):
         cli.main(["serve", str(tmp_path), "--mask"])
     assert seen["config"].masking is True

@@ -304,8 +304,10 @@ on a question, so "show me what you know about X" becomes a picture.
   report when you run one.
 - The viewer's server listens on `127.0.0.1` only, checks the `Host` header, and
   needs a random token on every API call. The token travels in the URL
-  fragment, which browsers do not send or log. A port already in use is an
-  error, not a silent shadow.
+  fragment, which browsers do not send or log. `--token` (or the
+  `GRAPHVIEW_TOKEN` environment variable) pins it for a viewer that runs as a
+  service, so a bookmarked URL survives restarts; the default stays a fresh
+  random token per run. A port already in use is an error, not a silent shadow.
 - The `search:` URL comes from your config file and nothing else; the graph and
   the page cannot change it.
 - With masking on (`masking: true`, or `--mask` for one run) everything served,

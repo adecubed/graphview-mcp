@@ -9,6 +9,8 @@ from __future__ import annotations
 import hmac
 import json
 import mimetypes
+import os
+import secrets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -17,6 +19,14 @@ from .service import GraphService
 
 VIEWER_DIR = (Path(__file__).parent / "viewer").resolve()
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost"}
+
+
+def resolve_token(pinned: str | None = None) -> str:
+    """The secret every API call must carry. A pinned one (`--token` or
+    $GRAPHVIEW_TOKEN) keeps a bookmarked URL working across restarts, which is
+    what a viewer run as a service needs; the default is a fresh random token
+    per run."""
+    return pinned or os.environ.get("GRAPHVIEW_TOKEN") or secrets.token_urlsafe(24)
 
 
 class BadRequest(ValueError):
